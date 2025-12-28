@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to 2026 - Space Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: black; overflow: hidden; height: 100vh; font-family: 'Rajdhani', sans-serif; color: white; }
+
+        /* Canvas for Stars */
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; pointer-events: none; /* Allows clicking through to canvas if needed */
+        }
+
+        /* --- INTRO SCREEN --- */
+        .intro-container { pointer-events: auto; transition: opacity 1s; }
+        
+        .hologram-box {
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 20px #00f3ff, inset 0 0 20px #00f3ff;
+            background: rgba(0, 20, 40, 0.8);
+            padding: 40px; border-radius: 10px;
+            backdrop-filter: blur(5px);
+            max-width: 400px; width: 90%; margin: 0 auto;
+        }
+
+        .sys-text { color: #00f3ff; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; margin-bottom: 20px; font-size: 0.8rem; }
+        
+        input {
+            background: transparent; border: none; border-bottom: 2px solid white;
+            color: white; font-size: 1.5rem; text-align: center; width: 100%; outline: none; padding: 10px;
+            font-family: 'Orbitron', sans-serif; margin-bottom: 30px;
+        }
+
+        .launch-btn {
+            background: #00f3ff; color: black; border: none; padding: 15px 40px;
+            font-size: 1.2rem; font-weight: 900; font-family: 'Orbitron', sans-serif;
+            cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .launch-btn:hover { background: white; box-shadow: 0 0 30px white; transform: scale(1.05); }
+
+        /* --- MAIN WISH SCREEN (Hidden initially) --- */
+        .wish-container {
+            opacity: 0; transform: scale(0.8); transition: all 2s ease-out;
+            pointer-events: auto;
+            text-shadow: 0 0 10px black;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 5rem; line-height: 1;
+            background: linear-gradient(to bottom, #fff, #aaa);
+            -webkit-background-clip: text; color: transparent;
+            text-shadow: 0 0 50px rgba(0, 243, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .sub-text { font-size: 1.5rem; letter-spacing: 5px; text-transform: uppercase; color: #00f3ff; margin-bottom: 30px; }
+
+        .message-box {
+            font-size: 1.2rem; max-width: 600px; line-height: 1.6;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.8), transparent);
+            padding: 20px; border-top: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .captain-tag { margin-top: 30px; font-size: 0.9rem; opacity: 0.7; }
+
+        /* White Flash Overlay */
+        #flash-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.1s;
+        }
+
+        /* Mobile Adjustments */
+        @media(max-width: 600px) { h1 { font-size: 3.5rem; } .hologram-box { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="space.mp3" type="audio/mp3">
+    </audio>
+
+    <div id="flash-overlay"></div>
+    <canvas id="starfield"></canvas>
+
+    <div id="ui-layer">
+        <div class="intro-container" id="scene-intro">
+            <div class="hologram-box">
+                <div class="sys-text">SYSTEM INITIALIZED /// 2025-END</div>
+                <h2 style="margin-bottom: 20px;">ENTER CAPTAIN NAME</h2>
+                <input type="text" id="username" placeholder="NAME..." autocomplete="off">
+                <button class="launch-btn" onclick="engageWarpDrive()">LAUNCH 2026</button>
+            </div>
+        </div>
+
+        <div class="wish-container" id="scene-wish">
+            <div class="sub-text">Welcome To The Future</div>
+            <h1>2026</h1>
+            <div class="message-box" id="msg-text">
+                Mission 2026 Started Successfully.<br>
+                May your year be full of light, speed, and endless possibilities.
+            </div>
+            <div class="captain-tag">Captain: <strong id="display-name" style="color:#00f3ff">YOU</strong></div>
+            <br>
+            <button onclick="changeQuote()" style="background:transparent; border:1px solid #00f3ff; color:#00f3ff; padding:10px 20px; cursor:pointer; font-family:'Orbitron'">
+                Scan New Wish
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. STARFIELD ENGINE (Pure Math) ---
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let stars = [];
+        let speed = 2; // Normal cruising speed
+        let warpSpeed = false;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Star Object
+        class Star {
+            constructor() {
+                this.x = (Math.random() - 0.5) * width * 2; // Wide spread
+                this.y = (Math.random() - 0.5) * height * 2;
+                this.z = Math.random() * width; // Depth
+                this.pz = this.z; // Previous Z for trail effect
+            }
+
+            update() {
+                this.z = this.z - speed; // Move star closer
+                if (this.z < 1) {
+                    this.z = width;
+                    this.x = (Math.random() - 0.5) * width * 2;
+                    this.y = (Math.random() - 0.5) * height * 2;
+                    this.pz = this.z;
+                }
+            }
+
+            draw() {
+                // 3D projection formula
+                let sx = (this.x / this.z) * (width / 2) + (width / 2);
+                let sy = (this.y / this.z) * (height / 2) + (height / 2);
+
+                let r = (1 - this.z / width) * 4; // Size based on distance (closer = bigger)
+                
+                // Trail logic for warp speed
+                let px = (this.x / this.pz) * (width / 2) + (width / 2);
+                let py = (this.y / this.pz) * (height / 2) + (height / 2);
+
+                ctx.beginPath();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = r;
+                ctx.moveTo(px, py);
+                ctx.lineTo(sx, sy);
+                ctx.stroke();
+
+                this.pz = this.z; // Update previous z
+            }
+        }
+
+        // Initialize Stars
+        for (let i = 0; i < 800; i++) {
+            stars.push(new Star());
+        }
+
+        // Animation Loop
+        function animate() {
+            // Motion Blur Effect (creates trails)
+            ctx.fillStyle = warpSpeed ? "rgba(0, 0, 0, 0.1)" : "rgba(0, 0, 0, 0.4)";
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+
+        // --- 2. GAME LOGIC & TRANSITIONS ---
+        
+        function engageWarpDrive() {
+            // Get Name
+            let name = document.getElementById('username').value;
+            if(!name) name = "Commander";
+            document.getElementById('display-name').innerText = name;
+            document.title = "Captain " + name + "'s 2026 Journey";
+
+            // Play Music
+            const music = document.getElementById('bg-music');
+            music.volume = 0.6;
+            music.play();
+
+            // Hide Intro
+            document.getElementById('scene-intro').style.opacity = 0;
+            setTimeout(() => { document.getElementById('scene-intro').style.display = 'none'; }, 1000);
+
+            // 1. INCREASE SPEED (Warp Start)
+            let speedInterval = setInterval(() => {
+                speed += 2;
+                warpSpeed = true;
+                if(speed > 100) clearInterval(speedInterval);
+            }, 50);
+
+            // 2. FLASH & REVEAL (After 3 seconds)
+            setTimeout(() => {
+                // White Flash
+                const flash = document.getElementById('flash-overlay');
+                flash.style.opacity = 1;
+                
+                setTimeout(() => {
+                    flash.style.opacity = 0; // Fade out flash
+                    speed = 0.5; // Slow Motion arrival
+                    warpSpeed = false;
+                    
+                    // Show Wishes
+                    const wishScene = document.getElementById('scene-wish');
+                    wishScene.style.opacity = 1;
+                    wishScene.style.transform = "scale(1)";
+                }, 200); // Short flash duration
+
+            }, 3000); // 3 seconds of warp travel
+        }
+
+        // 3. Quotes System
+        const quotes = [
+            "Stars can't shine without darkness. 2026 is your time to shine.",
+            "The future belongs to those who believe in the beauty of their dreams.",
+            "Don't watch the clock; do what it does. Keep going.",
+            "Limitless skies, infinite possibilities. Happy New Year!",
+            "New coordinates set for Success, Happiness, and Prosperity."
+        ];
+
+        function changeQuote() {
+            const msg = document.getElementById('msg-text');
+            msg.style.opacity = 0;
+            setTimeout(() => {
+                const r = Math.floor(Math.random() * quotes.length);
+                msg.innerText = quotes[r];
+                msg.style.opacity = 1;
+            }, 300);
+        }
+
+    </script>
+</body>
+</html>

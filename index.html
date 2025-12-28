@@ -3,164 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 Space Journey - Stainless Edition</title>
+    <title>2026 Earth Orbit Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@600;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: black; overflow: hidden; height: 100vh; font-family: 'Rajdhani', sans-serif; color: white; }
 
+        /* --- 1. STARS BACKGROUND --- */
         canvas { position: absolute; top: 0; left: 0; z-index: 1; }
 
+        /* --- 2. ROTATING REALISTIC EARTH --- */
+        .earth-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px; height: 350px;
+            z-index: 5;
+            border-radius: 50%;
+            /* 3D Shadow Effect */
+            box-shadow: inset -30px -20px 50px 10px rgba(0,0,0,0.9), 
+                        0 0 30px rgba(0, 150, 255, 0.4);
+        }
+
+        .earth {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            /* Earth Texture Map (Reliable URL) */
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Solarsystemscope_texture_2k_earth_daymap.jpg/1024px-Solarsystemscope_texture_2k_earth_daymap.jpg');
+            background-size: 200% 100%; /* Texture double width for looping */
+            animation: rotateEarth 40s linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes rotateEarth {
+            0% { background-position: 0 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Atmosphere Glow */
+        .atmosphere {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 360px; height: 360px; border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0, 180, 255, 0.3);
+            z-index: 4; pointer-events: none;
+        }
+
+        /* --- UI LAYER --- */
         #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; pointer-events: none;
         }
 
-        /* --- INTRO STYLES --- */
+        /* Intro Screen */
         .intro-container { pointer-events: auto; transition: opacity 1s; }
         .hologram-box {
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 243, 255, 0.1);
-            background: rgba(0, 10, 20, 0.9);
-            padding: 40px; border-radius: 15px;
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+            background: rgba(0, 10, 20, 0.85); /* Slightly transparent */
+            padding: 40px; border-radius: 20px;
+            backdrop-filter: blur(8px);
             max-width: 400px; width: 90%; margin: 0 auto;
         }
+
         input {
             background: transparent; border: none; border-bottom: 2px solid #00f3ff;
             color: white; font-size: 1.5rem; text-align: center; width: 100%; outline: none; padding: 10px;
             font-family: 'Rajdhani', sans-serif; font-weight: bold; margin-bottom: 25px;
         }
         .launch-btn {
-            background: linear-gradient(45deg, #00f3ff, #0077ff); color: white; border: none; padding: 12px 35px;
+            background: linear-gradient(90deg, #00f3ff, #0055ff); color: white; border: none; padding: 12px 35px;
             font-size: 1.2rem; font-weight: bold; font-family: 'Orbitron', sans-serif;
-            cursor: pointer; border-radius: 5px; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-            transition: 0.3s;
+            cursor: pointer; border-radius: 50px; 
+            box-shadow: 0 0 20px rgba(0, 119, 255, 0.5); transition: 0.3s;
         }
-        .launch-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 243, 255, 0.8); }
+        .launch-btn:hover { transform: scale(1.1); box-shadow: 0 0 40px rgba(0, 243, 255, 1); }
 
-        /* --- WISH SCREEN STYLES --- */
+        /* Wish Screen */
         .wish-container {
             opacity: 0; transform: scale(0.9); transition: all 1.5s ease-out;
             pointer-events: auto; width: 90%; max-width: 700px;
+            position: relative;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif; font-size: 5rem; line-height: 1;
-            /* Gold/Orange Fire Effect for 2026 */
-            background: linear-gradient(to bottom, #fff 0%, #ffcc00 50%, #ff6600 100%);
+            /* Fiery Gold Year */
+            background: linear-gradient(to bottom, #fff 0%, #ffbb00 50%, #ff4500 100%);
             -webkit-background-clip: text; color: transparent;
-            filter: drop-shadow(0 0 15px rgba(255, 100, 0, 0.6));
+            filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.8));
             margin-bottom: 10px;
         }
 
-        .sub-text { font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; color: #00f3ff; margin-bottom: 25px; }
-
-        /* --- STAINLESS STEEL SHAYARI LOOK --- */
+        /* --- STAINLESS STEEL SHAYARI --- */
         .message-box {
-            min-height: 140px;
-            padding: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            min-height: 150px; padding: 25px;
+            background: rgba(0,0,0,0.6); /* Darker backing so text pops over Earth */
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.15);
             display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
         }
 
         .stainless-text {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.6rem;
-            font-weight: 700;
-            line-height: 1.5;
-            text-transform: uppercase; /* Makes it look more industrial */
-            
-            /* THE STEEL GRADIENT MAGIC */
-            background: linear-gradient(
-                to bottom,
-                #ffffff 0%,
-                #e1e1e1 20%,
-                #f6f6f6 40%,
-                #9a9a9a 51%,
-                #c4c4c4 100%
-            );
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            
-            /* Metallic Shine Animation */
-            background-size: 200% auto;
-            animation: shine 4s linear infinite;
-            
-            /* Metal Shadow */
-            filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.8));
+            font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700;
+            text-transform: uppercase; line-height: 1.5;
+            /* Silver Gradient */
+            background: linear-gradient(to bottom, #fff, #bbb, #fff);
+            -webkit-background-clip: text; color: transparent;
+            text-shadow: 0px 2px 5px rgba(0,0,0,1);
         }
 
-        @keyframes shine {
-            to { background-position: 200% center; }
+        /* Emojis ke liye special class taaki wo rangeen dikhe */
+        .emoji-fix {
+            -webkit-text-fill-color: initial !important; /* Resets transparency */
+            text-shadow: none !important;
+            filter: none !important;
+            font-style: normal;
         }
 
         .btn-action {
-            background: transparent; border: 1px solid #aaa; color: #ccc; 
+            background: rgba(0,0,0,0.5); border: 1px solid #00f3ff; color: #00f3ff; 
             padding: 10px 30px; cursor: pointer; font-family:'Orbitron'; 
-            margin-top: 30px; transition: 0.3s; border-radius: 50px;
-            text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 25px; transition: 0.3s; border-radius: 50px;
         }
-        .btn-action:hover { border-color: white; color: white; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .btn-action:hover { background: #00f3ff; color: black; box-shadow: 0 0 20px rgba(0, 243, 255, 0.6); }
 
         #flash-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white;
             z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.1s;
         }
 
-        /* Mobile Adjustments */
         @media(max-width: 600px) { 
             h1 { font-size: 3.5rem; } 
-            .stainless-text { font-size: 1.2rem; }
+            .stainless-text { font-size: 1.2rem; } 
+            .earth-container, .atmosphere { width: 250px; height: 250px; }
         }
     </style>
 </head>
 <body>
 
-    <audio id="bg-music" loop>
-        <source src="space.mp3" type="audio/mp3">
-    </audio>
-
+    <audio id="bg-music" loop><source src="space.mp3" type="audio/mp3"></audio>
     <div id="flash-overlay"></div>
+    
     <canvas id="starfield"></canvas>
+
+    <div class="atmosphere"></div>
+    <div class="earth-container">
+        <div class="earth"></div>
+    </div>
 
     <div id="ui-layer">
         <div class="intro-container" id="scene-intro">
             <div class="hologram-box">
-                <h2 style="color:white; margin-bottom: 20px; font-family: 'Rajdhani';">IDENTITY VERIFICATION</h2>
+                <h2 style="color:white; margin-bottom: 20px; font-family: 'Rajdhani'; letter-spacing: 2px;">IDENTIFY YOURSELF</h2>
                 <input type="text" id="username" placeholder="Apna Naam Likhein..." autocomplete="off">
-                <button class="launch-btn" onclick="engageWarpDrive()">START ENGINE</button>
+                <button class="launch-btn" onclick="engageWarpDrive()">ENTER ORBIT 🚀</button>
             </div>
         </div>
 
         <div class="wish-container" id="scene-wish">
-            <div class="sub-text">Welcome To The Future</div>
+            <div style="color:#00f3ff; letter-spacing: 3px; font-size: 1rem; margin-bottom:10px;">ARRIVAL: EARTH ORBIT</div>
             <h1>2026</h1>
             
             <div class="message-box">
                 <div id="msg-text" class="stainless-text"></div>
             </div>
             
-            <div style="margin-top:20px; color: #888; font-size: 0.9rem;">
-                FROM: <span id="display-name" style="color:white; font-weight:bold;">YOU</span>
+            <div style="margin-top:20px; color: #ccc; font-size: 0.9rem;">
+                Wishing By: <span id="display-name" style="color:#ffcc00; font-weight:bold;">YOU</span>
             </div>
             
-            <button class="btn-action" onclick="typeWriterQuote()">
-                NEXT MESSAGE
-            </button>
+            <button class="btn-action" onclick="typeWriterQuote()">NEXT WISH ✨</button>
         </div>
     </div>
 
     <script>
-        // --- 1. STARS (Background) ---
+        // --- 1. STARS ENGINE ---
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
         let width, height, stars = [];
-        let speed = 2; let warpSpeed = false;
+        let speed = 1; let warpSpeed = false; // Initial slow speed
 
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
@@ -179,103 +203,127 @@
                 let sx = (this.x / this.z) * (width / 2) + (width / 2);
                 let sy = (this.y / this.z) * (height / 2) + (height / 2);
                 let r = (1 - this.z / width) * 4;
+                // Warp effect trail
                 let px = (this.x / this.pz) * (width / 2) + (width / 2);
                 let py = (this.y / this.pz) * (height / 2) + (height / 2);
-                ctx.beginPath(); ctx.strokeStyle = "white"; ctx.lineWidth = r;
-                ctx.moveTo(px, py); ctx.lineTo(sx, sy); ctx.stroke(); this.pz = this.z;
+                
+                ctx.beginPath(); 
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.9)"; 
+                ctx.lineWidth = warpSpeed ? r * 2 : r; // Thicker lines in warp
+                ctx.moveTo(px, py); ctx.lineTo(sx, sy); ctx.stroke(); 
+                this.pz = this.z;
             }
         }
-        for (let i = 0; i < 800; i++) { stars.push(new Star()); }
+        for (let i = 0; i < 900; i++) { stars.push(new Star()); }
         function animate() {
-            ctx.fillStyle = warpSpeed ? "rgba(0, 0, 0, 0.1)" : "rgba(0, 0, 0, 0.4)";
+            // Trail effect (fade out)
+            ctx.fillStyle = warpSpeed ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.5)";
             ctx.fillRect(0, 0, width, height);
             stars.forEach(s => { s.update(); s.draw(); });
             requestAnimationFrame(animate);
         }
         animate();
 
-        // --- 2. LOGIC & TYPEWRITER EFFECT ---
-        
+
+        // --- 2. GAME LOGIC ---
         function engageWarpDrive() {
             let name = document.getElementById('username').value;
-            if(!name) name = "Yaara"; 
+            if(!name) name = "Dost";
             document.getElementById('display-name').innerText = name;
-            document.title = "Happy New Year 2026 - " + name;
+            document.title = "Orbit 2026 - " + name;
 
             const music = document.getElementById('bg-music');
-            music.volume = 0.6; music.play().catch(e=>{});
+            music.volume = 0.5; music.play().catch(e=>{});
 
+            // Intro gayab
             document.getElementById('scene-intro').style.opacity = 0;
             setTimeout(() => { document.getElementById('scene-intro').style.display = 'none'; }, 1000);
 
-            // Warp Speed
+            // Warp Speed ON (Earth gayab temporarily)
+            document.querySelector('.earth-container').style.opacity = '0'; 
+            document.querySelector('.earth-container').style.transition = 'opacity 0.5s';
+            
             let speedInterval = setInterval(() => {
-                speed += 2; warpSpeed = true;
-                if(speed > 100) clearInterval(speedInterval);
+                speed += 4; warpSpeed = true;
+                if(speed > 150) clearInterval(speedInterval);
             }, 50);
 
-            // Flash & Reveal
+            // Arrival (Flash)
             setTimeout(() => {
                 const flash = document.getElementById('flash-overlay');
                 flash.style.opacity = 1;
+                
                 setTimeout(() => {
-                    flash.style.opacity = 0; speed = 0.5; warpSpeed = false;
+                    flash.style.opacity = 0; 
+                    speed = 0.5; // Very slow calm stars
+                    warpSpeed = false;
+                    
+                    // Show Wishes & Earth
                     const wishScene = document.getElementById('scene-wish');
                     wishScene.style.opacity = 1; wishScene.style.transform = "scale(1)";
                     
-                    // Start Typing First Quote
-                    typeWriterQuote();
+                    document.querySelector('.earth-container').style.opacity = '1'; // Bring Earth Back
                     
-                }, 300);
+                    typeWriterQuote();
+                }, 500);
             }, 3000);
         }
 
-        // --- STAINLESS HINDI SHAYARI LIST ---
+        // --- 3. HINDI SHAYARI WITH EMOJIS ---
+        // Note: Emojis ko <span class='emoji-fix'> me wrap kiya hai
         const quotes = [
-            "Chaand taaron ne aasmaan se salaam bheja hai, | Mubarak ho aapko naya saal, | Humne dil se ye paigam bheja hai!",
-            "Bhul jao bite huye kal ko, | Dil me basalo aane wale pal ko, | Khushiya lekar aayega 2026, | Naye saal ki shubhkaamnayein!",
-            "Sher kabhi chup kar shikar nahi karte, | Buzdil kabhi khulkar waar nahi karte, | Hum to wo hai jo Naya Saal wish karne ke liye, | 1 January ka intezaar nahi karte!",
-            "Naya savera nayi kiran ke sath, | Naya din ek pyari si muskaan ke sath, | Aapko naya saal mubarak ho, | Dher sari duaon ke sath.",
-            "Is rishte ko yunhi banaye rakhna, | Dil mein yaado ke chirag jalaye rakhna, | Bahut pyara safar raha 2025 ka, | Bas aisa hi sath 2026 mein bhi banaye rakhna."
+            "Chand taaron ki tarah chamke aapka naam, | Poore ho 2026 mein aapke saare kaam! <br><span class='emoji-fix'>🌙✨🚀</span>",
+            
+            "Beete huye kal ko bhul jaane ka waqt hai, | Nayi udaan bharne ka waqt hai. | Happy New Year 2026! <br><span class='emoji-fix'>🦅🌄🎆</span>",
+            
+            "Sher kabhi chup kar shikar nahi karte, | Aur hum naye saal ke liye 1 January ka intezaar nahi karte! <br><span class='emoji-fix'>🦁🔥👑</span>",
+            
+            "Khuda kare ye naya saal aapko raas aa jaye, | Jise aap chahte ho wo aapke paas aa jaye. <br><span class='emoji-fix'>🤲❤️🌹</span>",
+            
+            "Is naye saal mein khushiyo ki barsaat ho, | Pyar ke din aur mohabbat bhari raat ho! <br><span class='emoji-fix'>🌧️💑💖</span>",
+            
+            "Purana saal sabse ho raha hai door, | Kya kare yahi hai kudrat ka dastoor. | Naya saal laaye khushiyan bharpoor! <br><span class='emoji-fix'>🎁🥳🍾</span>"
         ];
 
         let currentQuoteIndex = -1;
-        let charIndex = 0;
         let typingInterval;
 
         function typeWriterQuote() {
-            // Select random quote
             let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * quotes.length);
-            } while (randomIndex === currentQuoteIndex); // Don't repeat same quote immediately
+            do { randomIndex = Math.floor(Math.random() * quotes.length); } while (randomIndex === currentQuoteIndex);
             currentQuoteIndex = randomIndex;
 
-            const text = quotes[currentQuoteIndex];
+            // Raw string from array
+            const fullText = quotes[currentQuoteIndex];
             const element = document.getElementById("msg-text");
             
-            // Clear previous
-            element.innerHTML = "";
-            charIndex = 0;
+            element.innerHTML = ""; // Clear existing
+            
+            // Isme hume HTML tags (<span>, <br>) ko ek saath handle karna padega
+            // Simple typewriter effect tags ko tod deta hai, isliye hum ek alag approach use karenge:
+            // Hum pura HTML insert karenge lekin characters ko invisible karke reveal karenge?
+            // Nahi, simple approach: | ko <br> mano, lekin <span> wala part last me direct append kar do.
+            
+            // Strategy: Split text by emoji span part
+            let textPart = fullText.split("<br>")[0]; // Text part
+            let emojiPart = fullText.includes("<br>") ? "<br>" + fullText.split("<br>")[1] : ""; // Emoji part
+
+            let charIndex = 0;
             clearInterval(typingInterval);
 
-            // Typewriter Logic
             typingInterval = setInterval(() => {
-                if (charIndex < text.length) {
-                    let char = text.charAt(charIndex);
-                    // Pipe sign (|) ko line break (<br>) me badlo
-                    if(char === '|') {
-                        element.innerHTML += "<br>";
-                    } else {
-                        element.innerHTML += char;
-                    }
+                if (charIndex < textPart.length) {
+                    let char = textPart.charAt(charIndex);
+                    if(char === '|') element.innerHTML += "<br>";
+                    else element.innerHTML += char;
                     charIndex++;
                 } else {
                     clearInterval(typingInterval);
+                    // Text khatam hone ke baad emojis dikhao
+                    element.innerHTML += emojiPart;
                 }
-            }, 50); // Typing speed (kam karein to tez hoga)
+            }, 40);
         }
-
     </script>
 </body>
 </html>
